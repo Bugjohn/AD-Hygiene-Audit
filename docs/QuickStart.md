@@ -1,262 +1,336 @@
 # QuickStart — AD-Hygiene-Audit
 
-Guide de démarrage rapide pour lancer un audit d’hygiène Active Directory avec **AD-Hygiene-Audit**.
+Guide de demarrage rapide pour lancer un audit d'hygiene Active Directory avec **AD-Hygiene-Audit**.
 
-Ce document est volontairement détaillé afin de permettre à une personne junior de lancer l’outil sans connaissance avancée de PowerShell ou d’Active Directory.
+Ce guide couvre le MVP actuel : le mode Mock est complet et valide, tandis que le mode Active Directory reel est prepare mais pas encore valide de bout en bout sur un environnement AD reel.
 
 ---
 
-# 1. Objectif du QuickStart
+## 1. Objectif
 
 Ce guide explique comment :
 
-1. préparer l’environnement ;
+1. preparer l'environnement ;
 2. lancer un premier audit en mode Mock ;
-3. créer un fichier de connexion sécurisé à l’Active Directory ;
-4. lancer un audit réel sur l’AD ;
-5. récupérer les rapports générés.
+3. recuperer les rapports generes ;
+4. preparer une configuration pour l'AD reel ;
+5. comprendre le statut actuel des exports et du scoring.
 
----
+## 2. Prerequis
 
-# 2. Prérequis
+### 2.1 PowerShell
 
-## 2.1 PowerShell
+L'outil necessite PowerShell 7 ou superieur.
 
-L’outil nécessite PowerShell 7 ou supérieur.
-
-Vérifier la version :
-
+```powershell
 pwsh --version
+```
+
 Exemple attendu :
+
+```text
 PowerShell 7.x.x
+```
 
-2.2 Module Active Directory
+### 2.2 Module Active Directory
 
-Pour interroger un vrai Active Directory, le module PowerShell ActiveDirectory doit être disponible.
+Le mode Mock ne necessite pas Active Directory.
 
-Tester :
+Pour le mode AD reel, le module PowerShell `ActiveDirectory` doit etre disponible :
+
+```powershell
 Get-Module -ListAvailable ActiveDirectory
-Si rien ne s’affiche, le module n’est pas installé.
-Sur Windows, il faut installer les outils RSAT :
-Get-WindowsCapability -Name RSAT.ActiveDirectory\* -Online
-Puis installer le module si nécessaire :
+```
+
+Sur Windows, installer RSAT si le module est absent :
+
+```powershell
+Get-WindowsCapability -Name RSAT.ActiveDirectory* -Online
 Add-WindowsCapability -Online -Name Rsat.ActiveDirectory.DS-LDS.Tools~~~~0.0.1.0
+```
 
-2.3 Droits nécessaires
+### 2.3 Droits necessaires
 
-Le compte utilisé pour lancer l’audit doit pouvoir lire l’annuaire Active Directory.
-Il n’est pas nécessaire d’utiliser un compte administrateur du domaine.
-Un compte de lecture standard suffit généralement pour :
-lire les utilisateurs ;
-lire les ordinateurs ;
-lire les groupes ;
-lire les politiques du domaine.
+Le compte utilise pour l'audit AD reel doit pouvoir lire l'annuaire Active Directory. Un compte de lecture standard suffit generalement pour lire les utilisateurs, ordinateurs, groupes et politiques du domaine.
 
-3. Récupérer le projet
+## 3. Recuperer le projet
 
-Cloner le projet :
-
+```powershell
 git clone https://github.com/<user>/AD-Hygiene-Audit.git
 cd AD-Hygiene-Audit
-Vérifier que le fichier principal est présent :
+```
+
+Verifier que le fichier principal est present :
+
+```powershell
 Get-ChildItem
+```
+
 Vous devez voir notamment :
+
+```text
 Invoke-ADHygieneAudit.ps1
 src/
 docs/
+```
 
-4. Premier test en mode Mock
+## 4. Premier test en mode Mock
 
-Le mode Mock permet de tester l’outil sans Active Directory.
-Il utilise de fausses données internes.
-C’est le mode recommandé pour vérifier que tout fonctionne.
-Commande :
-pwsh -File ./Invoke-ADHygieneAudit.ps1 `  -UseMockData`
--OutputPath ./outputs `  -InactiveDays 90`
--Mode Full
-Explication :
-Paramètre Rôle
--UseMockData Utilise les données de test
--OutputPath ./outputs Dossier où seront générés les rapports
--InactiveDays 90 Seuil d’inactivité en jours
--Mode Full Lance tous les checks disponibles
+Le mode Mock permet de tester le MVP complet sans Active Directory. C'est le mode recommande pour verifier que l'outil fonctionne.
 
-5. Vérifier les résultats Mock
+```powershell
+pwsh -File ./Invoke-ADHygieneAudit.ps1 `
+  -UseMockData `
+  -OutputPath ./outputs `
+  -InactiveDays 90 `
+  -Mode Full
+```
 
-Après exécution, vérifier le dossier :
+Parametres principaux :
+
+| Parametre | Role |
+| --- | --- |
+| `-UseMockData` | Utilise les donnees de test du MVP |
+| `-OutputPath ./outputs` | Dossier ou seront generes les rapports |
+| `-InactiveDays 90` | Seuil d'inactivite en jours |
+| `-Mode Full` | Lance tous les checks disponibles |
+| `-ConfigPath ./config/audit-config.example.json` | Charge une configuration explicite |
+
+## 5. Verifier les resultats Mock
+
+```powershell
 Get-ChildItem ./outputs
+```
+
 Vous devez obtenir des fichiers de rapport, par exemple :
-report.json
-AD-USR-001-InactiveUsers.csv
-AD-COMP-001-InactiveComputers.csv
-AD-PRIV-001-PrivilegedGroups.csv
-Si ces fichiers existent, l’outil fonctionne correctement.
 
-6. Préparer la connexion à l’Active Directory
+```text
+ad-hygiene-report.json
+AD-USR-001-Users-Comptes_utilisateurs_actifs_mais_inactifs.csv
+AD-USR-002-Users-Comptes_avec_mot_de_passe_qui_n'expire_jamais.csv
+AD-COMP-001-Computers-Ordinateurs_inactifs.csv
+AD-PRIV-001-PrivilegedGroups-Administrators.csv
+AD-PRIV-001-PrivilegedGroups-Domain_Admins.csv
+```
 
-6.1 Pourquoi créer un fichier Credential ?
+La convention actuelle des CSV est :
 
-Pour éviter de mettre un mot de passe en clair dans une commande ou dans un script.
-L’outil utilise un fichier sécurisé généré par PowerShell avec :
-Export-Clixml
-Ce fichier contient les identifiants chiffrés pour l’utilisateur Windows courant.
-Important :
-le fichier ne doit pas être partagé ;
-il ne fonctionne que pour l’utilisateur Windows qui l’a créé ;
-il ne doit pas être commité dans Git.
+```text
+<Id>-<Category>-<Titre_normalise>.csv
+```
 
-6.2 Créer le fichier de connexion
+Si `ad-hygiene-report.json` existe et que des CSV sont generes, le MVP Mock fonctionne correctement.
 
-Depuis la racine du projet :
-Get-Credential | Export-Clixml -Path ./ad-credential.xml
-Une fenêtre s’ouvre.
-Saisir le compte AD au format :
-DOMAINE\utilisateur
-ou :
-utilisateur@domaine.local
-Exemple :
-ACME\audit.ad
-ou :
-audit.ad@acme.local
-
-6.3 Vérifier que le fichier existe
-
-Test-Path ./ad-credential.xml
-Résultat attendu :
-True
-
-6.4 Tester la lecture du credential
-
-$Credential = Import-Clixml -Path ./ad-credential.xml
-$Credential.UserName
-Résultat attendu :
-ACME\audit.ad
-ou :
-audit.ad@acme.local
-Ne jamais afficher le mot de passe.
-
-7. Lancer l’audit sur le vrai Active Directory
-
-Pour utiliser l’AD réel, il ne faut plus utiliser -UseMockData.
-Commande :
-pwsh -File ./Invoke-ADHygieneAudit.ps1 `  -CredentialPath ./ad-credential.xml`
--OutputPath ./outputs-ad `  -InactiveDays 90`
--Mode Full
-Explication :
-Paramètre Rôle
--CredentialPath ./ad-credential.xml Fichier contenant le compte AD sécurisé
--OutputPath ./outputs-ad Dossier des rapports AD réels
--InactiveDays 90 Seuil d’inactivité
--Mode Full Lance tous les checks
-
-8. Comment être sûr qu’on n’est plus en mode Mock ?
-
-Le mode Mock est activé uniquement si la commande contient :
--UseMockData
-
-Donc :
-pwsh -File ./Invoke-ADHygieneAudit.ps1 -UseMockData
-= mode Mock
-
-Alors que :
-pwsh -File ./Invoke-ADHygieneAudit.ps1 -CredentialPath ./ad-credential.xml
-= mode AD réel
-
-9. Lire les résultats de l’audit AD
+## 6. Lire les resultats
 
 Lister les fichiers :
 
-Get-ChildItem ./outputs-ad
+```powershell
+Get-ChildItem ./outputs
+```
+
 Ouvrir le rapport JSON :
-Get-Content ./outputs-ad/report.json
-Ouvrir les fichiers CSV dans Excel ou LibreOffice.
-Les CSV correspondent aux findings détectés par check.
 
-10. Modes disponibles
+```powershell
+Get-Content ./outputs/ad-hygiene-report.json
+```
 
-Mode Description
-Full Lance tous les checks
-Daily Mode prévu pour exécution planifiée
-UsersOnly Lance uniquement les checks utilisateurs
-PrivilegedOnly Lance uniquement les checks liés aux privilèges
+Ouvrir les fichiers CSV dans Excel ou LibreOffice. Les CSV correspondent aux findings detectes par check.
 
-Exemple utilisateurs uniquement :
-pwsh -File ./Invoke-ADHygieneAudit.ps1
--CredentialPath ./ad-credential.xml
--OutputPath ./outputs-users
--InactiveDays 90 `
--Mode UsersOnly
+Les exports actuellement disponibles sont :
 
-11. Erreurs fréquentes
+- JSON : `ad-hygiene-report.json`
+- CSV : un fichier par finding avec donnees exportables
 
-Le module ActiveDirectory est introuvable
+Les exports HTML et Markdown ne sont pas encore disponibles.
+
+## 7. Scoring
+
+Le scoring reel est numerique, de `0` a `100`.
+
+La base est `100`, puis des penalites sont appliquees selon la severite et le nombre d'elements detectes :
+
+| Severite | Penalite par element |
+| --- | ---: |
+| `Critical` | 20 |
+| `High` | 10 |
+| `Medium` | 5 |
+| `Low` | 2 |
+| `Info` | 0 |
+
+Le JSON contient aussi un resume par severite : `Critical`, `High`, `Medium`, `Low`, `Info`.
+
+## 8. Utiliser ConfigPath
+
+`ConfigPath` permet de charger explicitement un fichier de configuration.
+
+```powershell
+pwsh -File ./Invoke-ADHygieneAudit.ps1 `
+  -ConfigPath ./config/audit-config.example.json `
+  -UseMockData `
+  -OutputPath ./outputs-config
+```
+
+Les parametres passes en ligne de commande restent prioritaires sur les valeurs de configuration.
+
+## 9. Preparer l'AD reel
+
+Le mode AD reel est prepare dans le code, mais il n'est pas encore valide pour ce MVP. Pour une execution AD reelle, le chemin du credential doit etre defini dans la configuration avec `activeDirectory.credentialFile`.
+
+Creer le credential au chemin attendu par la configuration d'exemple :
+
+```powershell
+Get-Credential | Export-Clixml -Path ./config/ad-credential.xml
+```
+
+Ce fichier :
+
+- ne doit pas etre partage ;
+- ne fonctionne que pour l'utilisateur Windows qui l'a cree ;
+- ne doit pas etre commite dans Git.
+
+Verifier le fichier :
+
+```powershell
+Test-Path ./config/ad-credential.xml
+```
+
+Resultat attendu :
+
+```text
+True
+```
+
+Lancer l'audit en utilisant une configuration :
+
+```powershell
+pwsh -File ./Invoke-ADHygieneAudit.ps1 `
+  -ConfigPath ./config/audit-config.example.json `
+  -OutputPath ./outputs-ad `
+  -InactiveDays 90 `
+  -Mode Full
+```
+
+Important : le mode Mock est active uniquement si la commande contient `-UseMockData`. Sans `-UseMockData`, l'outil utilise les collecteurs AD reels et la configuration fournie.
+
+## 10. Modes disponibles
+
+| Mode | Description |
+| --- | --- |
+| `Full` | Lance tous les checks disponibles |
+| `Daily` | Mode prevu pour execution planifiee |
+| `UsersOnly` | Lance uniquement les checks utilisateurs |
+| `PrivilegedOnly` | Lance uniquement les checks lies aux privileges |
+
+Exemple utilisateurs uniquement en Mock :
+
+```powershell
+pwsh -File ./Invoke-ADHygieneAudit.ps1 `
+  -UseMockData `
+  -OutputPath ./outputs-users `
+  -InactiveDays 90 `
+  -Mode UsersOnly
+```
+
+## 11. Erreurs frequentes
+
+### Le module ActiveDirectory est introuvable
 
 Erreur probable :
+
+```text
 The specified module 'ActiveDirectory' was not loaded
+```
 
-Solution :
-Installer RSAT Active Directory.
-Le fichier credential est introuvable
+Solution : installer RSAT Active Directory. Cette erreur ne concerne pas le mode Mock.
+
+### Le fichier credential AD est introuvable
+
 Erreur probable :
-CredentialPath not found
 
-Solution :
+```text
+Fichier de credential Active Directory introuvable
+```
 
-Vérifier le chemin :
-Test-Path ./ad-credential.xml
-Mauvais identifiant ou mot de passe
+Solution : verifier le chemin configure dans `activeDirectory.credentialFile`.
 
-Solution :
+```powershell
+Test-Path ./config/ad-credential.xml
+```
 
-Regénérer le fichier :
+### Mauvais identifiant ou mot de passe
 
-Remove-Item ./ad-credential.xml
-Get-Credential | Export-Clixml -Path ./ad-credential.xml
-Aucun résultat dans certains CSV
-Ce n’est pas forcément une erreur.
-Cela peut signifier que le check n’a détecté aucun problème.
+Solution : regenerer le fichier de credential au chemin configure.
 
-Exemple :
-aucun compte inactif ;
-aucun OS obsolète ;
-aucun compte privilégié non conforme.
+```powershell
+Get-Credential | Export-Clixml -Path ./config/ad-credential.xml
+```
 
-12. Bonnes pratiques
+### Aucun resultat dans certains CSV
 
-Ne jamais commiter les credentials
-Ajouter dans .gitignore :
+Ce n'est pas forcement une erreur. Cela peut signifier que le check n'a detecte aucun probleme.
+
+Exemples :
+
+- aucun compte inactif ;
+- aucun OS obsolete ;
+- aucun compte privilegie non conforme.
+
+## 12. Bonnes pratiques
+
+Ne jamais commiter les credentials.
+
+Ajouter dans `.gitignore` si necessaire :
+
+```gitignore
 *.xml
-*credential\*
+*credential*
 _cred_
-Utiliser un compte dédié
-Créer idéalement un compte AD dédié :
-audit.ad
-Avec uniquement les droits nécessaires en lecture.
-Séparer les sorties Mock et AD réel
-Exemple :
+```
+
+Utiliser idealement un compte AD dedie, par exemple `audit.ad`, avec uniquement les droits necessaires en lecture.
+
+Separer les sorties Mock et AD reel :
+
+```text
 outputs-mock/
 outputs-ad/
-Cela évite de mélanger les résultats de test et les résultats réels.
+```
 
-13. Exemple complet recommandé
+## 13. Exemple complet recommande
 
-Test Mock
-pwsh -File ./Invoke-ADHygieneAudit.ps1 `  -UseMockData`
--OutputPath ./outputs-mock `  -InactiveDays 90`
--Mode Full
-Création du credential
-Get-Credential | Export-Clixml -Path ./ad-credential.xml
-Audit AD réel
-pwsh -File ./Invoke-ADHygieneAudit.ps1 `  -CredentialPath ./ad-credential.xml`
--OutputPath ./outputs-ad `  -InactiveDays 90`
--Mode Full
+Test Mock :
 
-14. Rappel important
+```powershell
+pwsh -File ./Invoke-ADHygieneAudit.ps1 `
+  -UseMockData `
+  -OutputPath ./outputs-mock `
+  -InactiveDays 90 `
+  -Mode Full
+```
 
-AD-Hygiene-Audit est un outil d’audit de premier niveau.
-Il permet d’identifier rapidement des faiblesses d’hygiène Active Directory.
+Preparation AD reelle :
+
+```powershell
+Get-Credential | Export-Clixml -Path ./config/ad-credential.xml
+```
+
+Execution AD reelle preparee, non validee pour le MVP :
+
+```powershell
+pwsh -File ./Invoke-ADHygieneAudit.ps1 `
+  -ConfigPath ./config/audit-config.example.json `
+  -OutputPath ./outputs-ad `
+  -InactiveDays 90 `
+  -Mode Full
+```
+
+## 14. Rappel important
+
+AD-Hygiene-Audit est un outil d'audit de premier niveau. Il permet d'identifier rapidement des faiblesses d'hygiene Active Directory.
+
 Il ne remplace pas :
-un audit de sécurité complet ;
-une revue d’architecture AD ;
-un pentest ;
-une analyse approfondie des ACL, GPO ou chemins d’attaque.
+
+- un audit de securite complet ;
+- une revue d'architecture AD ;
+- un audit Red Team / Pentest.
