@@ -143,6 +143,20 @@ Lit la stratégie de mot de passe du domaine Active Directory.
 - Absence de complexité
 - Durée excessive des mots de passe
 
+**Règles contrôlées :**
+
+- Longueur minimale du mot de passe >= 12
+- Complexité activée
+- Seuil de verrouillage > 0
+
+**Statuts possibles :**
+
+- `Compliant`
+- `NonCompliant`
+
+**Recommandations :**
+Le check génère des recommandations si une règle minimale n’est pas respectée.
+
 ---
 
 ## 📌 Convention de nommage

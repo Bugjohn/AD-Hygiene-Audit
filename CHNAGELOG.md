@@ -90,3 +90,4 @@ Le format est inspiré de "Keep a Changelog" et respecte le versioning sémantiq
 
 - Added AD-DOM-001 check to expose the Active Directory password policy.
 - Added Mock and AD domain collectors.
+- Improved AD-DOM-001 to analyze password policy compliance instead of only exposing raw values.
