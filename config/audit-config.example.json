@@ -30,7 +30,7 @@
     },
     "computers": {
       "inactiveComputers": true,
-      "obsoleteOperatingSystems": false
+      "obsoleteOperatingSystems": true
     },
     "domain": {
       "passwordPolicy": true,
@@ -48,7 +48,8 @@
     "AD-USR-003": "High",
     "AD-PRIV-001": "Info",
     "AD-PRIV-002": "High",
-    "AD-DOM-001": "Info"
+    "AD-DOM-001": "Info",
+    "AD-COMP-002": "High"
   },
   "reports": {
     "json": true,

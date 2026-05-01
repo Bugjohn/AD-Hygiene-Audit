@@ -123,6 +123,31 @@ Identifie les comptes ordinateurs dont la dernière connexion dépasse le seuil 
 
 ---
 
+### AD-COMP-002 — Systèmes d’exploitation obsolètes
+
+**Description :**
+Identifie les ordinateurs utilisant un système d’exploitation obsolète.
+
+**OS détectés comme obsolètes :**
+
+- Windows XP
+- Windows 7
+- Windows Server 2003
+- Windows Server 2008
+
+**Risque :**
+
+- Absence de support éditeur
+- Vulnérabilités non corrigées
+- Exposition accrue aux attaques
+
+**Statuts possibles :**
+
+- `Compliant`
+- `NonCompliant`
+
+---
+
 ### AD-DOM-001 — Password Policy du domaine
 
 **Description :**

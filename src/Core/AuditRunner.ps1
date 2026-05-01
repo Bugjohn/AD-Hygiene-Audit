@@ -1,5 +1,6 @@
 . "$PSScriptRoot/../Checks/Users/Check-AdminUsers.ps1"
 . "$PSScriptRoot/../Checks/Computers/Check-InactiveComputers.ps1"
+. "$PSScriptRoot/../Checks/Computers/Check-ObsoleteOS.ps1"
 . "$PSScriptRoot/../Checks/Domain/Check-PasswordPolicy.ps1"
 . "$PSScriptRoot/../Collectors/MockComputerCollector.ps1"
 . "$PSScriptRoot/../Collectors/ADComputerCollector.ps1"
@@ -112,6 +113,9 @@ function Invoke-AuditRunner {
         $Findings += Test-InactiveComputers `
             -Computers $Computers `
             -InactiveDays $InactiveDays
+
+        Write-Host "[5/7] Analyse des systèmes d'exploitation obsolètes..."
+        $Findings += Test-ObsoleteOperatingSystems -Computers $Computers
     }
 
     if ($RunDomainChecks) {
