@@ -106,6 +106,29 @@ Identifie les comptes inactifs présents dans des groupes privilégiés.
 
 ---
 
+### AD-PRIV-003 — Comptes à privilèges non conformes
+
+**Description :**
+Identifie les écarts simples sur les comptes à privilèges à partir des données Users et Groups déjà collectées.
+
+**Règles contrôlées :**
+
+- Compte administrateur inactif (`AdminCount = 1` et dernière connexion au-delà du seuil)
+- Compte de service avec SPN présent dans un groupe privilégié
+- Compte administrateur désactivé (`AdminCount = 1` et `Enabled = false`)
+
+**Paramètre :**
+
+- `InactiveDays`
+
+**Risque :**
+
+- Comptes privilégiés dormants
+- Surface Kerberoasting sur des comptes sensibles
+- Privilèges résiduels sur comptes désactivés
+
+---
+
 ### AD-COMP-001 — Ordinateurs inactifs
 
 **Description :**
@@ -184,6 +207,46 @@ Le check génère des recommandations si une règle minimale n’est pas respect
 
 ---
 
+### AD-DOM-002 — Password Policy avancée
+
+**Description :**
+Analyse des règles complémentaires de stratégie de mot de passe et de verrouillage exposées par le collecteur domaine.
+
+**Règles contrôlées :**
+
+- Durée maximale du mot de passe
+- Longueur minimale du mot de passe
+- Historique des mots de passe
+- Durée de verrouillage
+
+**Risque :**
+
+- Politique de mot de passe insuffisamment robuste
+- Rotation ou historique de mots de passe inadaptés
+- Verrouillage de compte mal calibré
+
+---
+
+### AD-DOM-003 — Kerberos Policy & Exposure
+
+**Description :**
+Analyse simple de la politique Kerberos exposée par le collecteur domaine et des comptes avec SPN issus des Users.
+
+**Règles contrôlées :**
+
+- `MaxTicketAge > 10h`
+- `MaxRenewAge > 7 jours`
+- `MaxServiceAge > 600 minutes`
+- `ServicePrincipalName` non vide
+
+**Risque :**
+
+- Durée de tickets Kerberos excessive
+- Fenêtre d’exploitation prolongée
+- Surface Kerberoasting liée aux comptes avec SPN
+
+---
+
 ## 📌 Convention de nommage
 
 Format :
@@ -227,18 +290,16 @@ Un Finding contient typiquement :
 
 ### Utilisateurs
 
-- AD-USR-003 : Comptes administrateurs
+- À compléter
 
 ### Ordinateurs
 
-- AD-COMP-002 : OS obsolètes
+- À compléter
 
 ### Domaine
 
-- AD-DOM-001 : Password Policy
-- AD-DOM-002 : Lockout Policy
+- À compléter
 
 ### Kerberos
 
-- AD-KRB-001 : Comptes avec SPN
 - AD-KRB-002 : Unconstrained Delegation

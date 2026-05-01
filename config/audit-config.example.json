@@ -7,6 +7,7 @@
   },
   "activeDirectory": {
     "domain": "example.local",
+    "credentialFile": "./config/ad-credential.xml",
     "searchBase": "DC=example,DC=local",
     "userSearchBase": "OU=Users,DC=example,DC=local",
     "computerSearchBase": "OU=Computers,DC=example,DC=local",
@@ -26,6 +27,7 @@
     "privilegedGroups": {
       "members": true,
       "inactiveMembers": true,
+      "accountCompliance": true,
       "nestedGroups": false
     },
     "computers": {
@@ -34,6 +36,8 @@
     },
     "domain": {
       "passwordPolicy": true,
+      "passwordPolicyAdvanced": true,
+      "kerberosPolicyExposure": true,
       "lockoutPolicy": false,
       "functionalLevel": false
     },
@@ -48,7 +52,11 @@
     "AD-USR-003": "High",
     "AD-PRIV-001": "Info",
     "AD-PRIV-002": "High",
+    "AD-PRIV-003": "High",
     "AD-DOM-001": "Info",
+    "AD-DOM-002": "Medium",
+    "AD-DOM-003": "High",
+    "AD-COMP-001": "Medium",
     "AD-COMP-002": "High"
   },
   "reports": {

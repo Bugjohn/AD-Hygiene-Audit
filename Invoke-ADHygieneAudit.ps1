@@ -1,13 +1,3 @@
-<# Désactivé pour le mock
-param(
-    [string]$OutputPath = ".\output",
-    [string]$ConfigPath = ".\config\audit-config.example.json",
-    [ValidateSet("Full", "Daily", "UsersOnly", "PrivilegedOnly")]
-    [string]$Mode = "Full",
-    [int]$InactiveDays = 90
-) #>
-
-<# A desactivé en environnement windows#>
 param(
     [string]$OutputPath = "./outputs",
     [string]$ConfigPath = "./config/audit-config.example.json",
@@ -19,6 +9,9 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+# ---------------------------
+# Chargement config
+# ---------------------------
 if (Test-Path $ConfigPath) {
     try {
         $Config = Get-Content -Path $ConfigPath -Raw | ConvertFrom-Json
@@ -45,32 +38,66 @@ if (Test-Path $ConfigPath) {
     catch {
         Write-Warning "Impossible de lire le fichier de configuration '$ConfigPath'. Les valeurs par défaut ou CLI seront utilisées."
     }
-} else {
+}
+else {
     Write-Warning "Fichier de configuration introuvable : '$ConfigPath'. Les valeurs par défaut ou CLI seront utilisées."
 }
 
+# Sécurité : toujours avoir un objet Config
+if (-not $Config) {
+    $Config = @{}
+}
+
+# ---------------------------
+# Chargement Core
+# ---------------------------
 . "$PSScriptRoot/src/Core/AuditRunner.ps1"
-. "$PSScriptRoot/src/Collectors/ADUserCollector.ps1"
-. "$PSScriptRoot/src/Collectors/MockUserCollector.ps1"
-. "$PSScriptRoot/src/Checks/Users/Check-InactiveUsers.ps1"
-. "$PSScriptRoot/src/Reports/JsonReport.ps1"
-. "$PSScriptRoot/src/Reports/CsvReport.ps1"
-. "$PSScriptRoot/src/Checks/Users/Check-PasswordNeverExpires.ps1"
-. "$PSScriptRoot/src/Collectors/MockGroupCollector.ps1"
-. "$PSScriptRoot/src/Checks/Groups/Check-PrivilegedGroups.ps1"
 . "$PSScriptRoot/src/Core/ScoringEngine.ps1"
-. "$PSScriptRoot/src/Collectors/ADGroupCollector.ps1"
+
+# ---------------------------
+# Chargement Collectors (switch Mock / AD)
+# ---------------------------
+if ($UseMockData) {
+    . "$PSScriptRoot/src/Collectors/MockUserCollector.ps1"
+    . "$PSScriptRoot/src/Collectors/MockGroupCollector.ps1"
+    . "$PSScriptRoot/src/Collectors/MockComputerCollector.ps1"
+    . "$PSScriptRoot/src/Collectors/MockDomainCollector.ps1"
+}
+else {
+    . "$PSScriptRoot/src/Collectors/ADUserCollector.ps1"
+    . "$PSScriptRoot/src/Collectors/ADGroupCollector.ps1"
+    . "$PSScriptRoot/src/Collectors/ADComputerCollector.ps1"
+    . "$PSScriptRoot/src/Collectors/ADDomainCollector.ps1"
+}
+
+# ---------------------------
+# Chargement Checks (inchangé)
+# ---------------------------
+. "$PSScriptRoot/src/Checks/Users/Check-InactiveUsers.ps1"
+. "$PSScriptRoot/src/Checks/Users/Check-PasswordNeverExpires.ps1"
+
+. "$PSScriptRoot/src/Checks/Groups/Check-PrivilegedGroups.ps1"
 . "$PSScriptRoot/src/Checks/Groups/Check-InactivePrivilegedUsers.ps1"
 
+# ---------------------------
+# Reports
+# ---------------------------
+. "$PSScriptRoot/src/Reports/JsonReport.ps1"
+. "$PSScriptRoot/src/Reports/CsvReport.ps1"
 
-
-
+# ---------------------------
+# Output directory
+# ---------------------------
 if (-not (Test-Path $OutputPath)) {
     New-Item -ItemType Directory -Path $OutputPath | Out-Null
 }
 
+# ---------------------------
+# Execution
+# ---------------------------
 Invoke-AuditRunner `
     -OutputPath $OutputPath `
     -InactiveDays $InactiveDays `
     -Mode $Mode `
-    -UseMockData:$UseMockData
+    -UseMockData:$UseMockData `
+    -Config $Config

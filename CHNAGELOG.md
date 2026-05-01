@@ -1,42 +1,42 @@
 # Changelog
 
-Toutes les évolutions notables du projet AD-Hygiene-Audit sont documentées ici.
+All notable changes to the AD-Hygiene-Audit project are documented here.
 
-Le format est inspiré de "Keep a Changelog" et respecte le versioning sémantique.
+The format is inspired by "Keep a Changelog" and follows semantic versioning.
 
 ---
 
 ## [1.0.0] - 2026-05-01
 
-### 🎉 Première version stable (MVP)
+### 🎉 First stable release (MVP)
 
-#### ✅ Ajouté
+#### ✅ Added
 
-- Architecture modulaire :
+- Modular architecture:
   - Collectors
   - Checks
   - Core (AuditRunner, ScoringEngine)
   - Reports (JSON, CSV)
 
-- Mode Mock complet pour développement sans Active Directory
+- Complete Mock mode for development without Active Directory
 
-- Collecte des données :
-  - Utilisateurs (AD + Mock)
-  - Groupes privilégiés (Mock + structure AD prête)
+- Data collection:
+  - Users (AD + Mock)
+  - Privileged groups (Mock + AD-ready structure)
 
-- Checks implémentés :
-  - AD-USR-001 : comptes inactifs
-  - AD-USR-002 : password never expires
-  - AD-PRIV-001 : membres des groupes privilégiés
-  - AD-PRIV-002 : comptes inactifs dans groupes admin
+- Implemented checks:
+  - AD-USR-001: inactive accounts
+  - AD-USR-002: password never expires
+  - AD-PRIV-001: privileged group members
+  - AD-PRIV-002: inactive accounts in admin groups
 
-- Scoring global avec niveau de maturité
+- Global scoring with maturity level
 
-- Export des résultats :
-  - JSON (vue globale)
-  - CSV (un fichier par finding)
+- Results export:
+  - JSON (global overview)
+  - CSV (one file per finding)
 
-- Paramètre `-Mode` fonctionnel :
+- Functional `-Mode` parameter:
   - Full
   - Daily
   - UsersOnly
@@ -44,44 +44,44 @@ Le format est inspiré de "Keep a Changelog" et respecte le versioning sémantiq
 
 ---
 
-#### 🛠️ Corrigé
+#### 🛠️ Fixed
 
-- Correction d’un bug d’écrasement des fichiers CSV pour AD-PRIV-001 :
-  - génération d’un fichier unique par groupe privilégié
+- Fixed a CSV overwrite bug for AD-PRIV-001:
+  - one dedicated file is now generated per privileged group
 
-- Activation réelle du filtrage des checks via le paramètre `-Mode`
-
----
-
-#### ⚠️ Limites connues
-
-- `ConfigPath` non implémenté
-- Tests automatisés absents
-- Collecte AD partiellement implémentée
-- Exports HTML et Markdown non disponibles
-- Plusieurs checks prévus mais non implémentés
+- Enabled actual check filtering through the `-Mode` parameter
 
 ---
 
-#### 🚧 À venir
+#### ⚠️ Known limitations
 
-- Ajout des checks :
-  - Utilisateurs (admin)
-  - Ordinateurs (inactifs, OS obsolètes)
-  - Domaine (policies)
+- `ConfigPath` not implemented
+- No automated tests yet
+- AD collection partially implemented
+- HTML and Markdown exports not available
+- Several planned checks not yet implemented
+
+---
+
+#### 🚧 Coming next
+
+- Add checks for:
+  - Users (admin accounts)
+  - Computers (inactive, obsolete OS)
+  - Domain (policies)
   - Kerberos
 
-- Implémentation de la configuration via JSON
+- Implement JSON-based configuration
 
-- Ajout de tests automatisés
+- Add automated tests
 
-- Export HTML / Markdown
+- Add HTML / Markdown exports
 
 ---
 
 ## [Unreleased]
 
-- ### Added
+### Added
 
 - Added AD-USR-003 check to identify administrator user accounts based on privileged group membership.
 
@@ -93,3 +93,9 @@ Le format est inspiré de "Keep a Changelog" et respecte le versioning sémantiq
 - Improved AD-DOM-001 to analyze password policy compliance instead of only exposing raw values.
 
 - Added AD-COMP-002 check to detect obsolete operating systems.
+
+- Added secure Active Directory credential loading from `activeDirectory.credentialFile` using `Import-Clixml`.
+- Added AD-PRIV-003 check to identify non-compliant privileged accounts.
+- Added AD-DOM-003 check to analyze Kerberos policy exposure and accounts with SPN.
+
+- Updated checks documentation with AD-PRIV-003 and AD-DOM-003.

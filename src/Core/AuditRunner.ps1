@@ -2,55 +2,22 @@
 . "$PSScriptRoot/../Checks/Computers/Check-InactiveComputers.ps1"
 . "$PSScriptRoot/../Checks/Computers/Check-ObsoleteOS.ps1"
 . "$PSScriptRoot/../Checks/Domain/Check-PasswordPolicy.ps1"
+. "$PSScriptRoot/../Checks/Domain/Check-PasswordPolicyAdvanced.ps1"
+. "$PSScriptRoot/../Checks/Domain/Check-KerberosPolicyExposure.ps1"
+. "$PSScriptRoot/../Checks/Groups/Check-PrivilegedAccountCompliance.ps1"
+
 . "$PSScriptRoot/../Collectors/MockComputerCollector.ps1"
 . "$PSScriptRoot/../Collectors/ADComputerCollector.ps1"
 . "$PSScriptRoot/../Collectors/MockDomainCollector.ps1"
 . "$PSScriptRoot/../Collectors/ADDomainCollector.ps1"
 
-<# A réactiver en prod 
-function Invoke-AuditRunner {
-    param(
-        [string]$OutputPath,
-        [int]$InactiveDays,
-        [string]$Mode
-    )
-
-    Write-Host "=== AD Hygiene Audit ===" -ForegroundColor Cyan
-    Write-Host "Mode : $Mode"
-    Write-Host "Seuil inactivité : $InactiveDays jours"
-    Write-Host ""
-
-    $Findings = @()
-
-    Write-Host "[1/3] Collecte des utilisateurs AD..."
-    $Users = Get-ADHygieneUsers
-
-    Write-Host "[2/3] Analyse des comptes inactifs..."
-    $Findings += Test-InactiveUsers `
-        -Users $Users `
-        -InactiveDays $InactiveDays
-
-    Write-Host "[3/3] Export des rapports..."
-    Export-ADHygieneJsonReport `
-        -Findings $Findings `
-        -OutputPath $OutputPath
-
-    Export-ADHygieneCsvReport `
-        -Findings $Findings `
-        -OutputPath $OutputPath
-
-    Write-Host ""
-    Write-Host "Audit terminé." -ForegroundColor Green
-    Write-Host "Rapports générés dans : $OutputPath"
-} #>
-
-<# Adaptation pour le mock #>
 function Invoke-AuditRunner {
     param(
         [string]$OutputPath,
         [int]$InactiveDays,
         [string]$Mode,
-        [switch]$UseMockData
+        [switch]$UseMockData,
+        [object]$Config
     )
 
     Write-Host "=== AD Hygiene Audit ===" -ForegroundColor Cyan
@@ -61,11 +28,16 @@ function Invoke-AuditRunner {
 
     $Findings = @()
     $Groups = $null
+    $Users = $null
+
     $RunUserChecks = $Mode -in @("Full", "Daily", "UsersOnly")
     $RunPrivilegedChecks = $Mode -in @("Full", "Daily", "PrivilegedOnly")
     $RunComputerChecks = $Mode -in @("Full", "Daily")
     $RunDomainChecks = $Mode -in @("Full", "Daily")
 
+    # ---------------------------
+    # USERS
+    # ---------------------------
     if ($RunUserChecks) {
         Write-Host "[1/7] Collecte des utilisateurs..."
 
@@ -79,7 +51,7 @@ function Invoke-AuditRunner {
         $Findings += Test-InactiveUsers `
             -Users $Users `
             -InactiveDays $InactiveDays
-    
+
         Write-Host "[3/7] Analyse PasswordNeverExpires..."
         $Findings += Test-PasswordNeverExpires -Users $Users
 
@@ -98,6 +70,9 @@ function Invoke-AuditRunner {
             -Groups $Groups
     }
 
+    # ---------------------------
+    # COMPUTERS
+    # ---------------------------
     if ($RunComputerChecks) {
         Write-Host "[5/7] Analyse des ordinateurs inactifs..."
 
@@ -118,6 +93,9 @@ function Invoke-AuditRunner {
         $Findings += Test-ObsoleteOperatingSystems -Computers $Computers
     }
 
+    # ---------------------------
+    # DOMAIN
+    # ---------------------------
     if ($RunDomainChecks) {
         Write-Host "[5/7] Lecture de la Password Policy..."
 
@@ -132,9 +110,26 @@ function Invoke-AuditRunner {
 
         if ($Policy) {
             $Findings += Test-PasswordPolicy -Policy $Policy
+
+            $Findings += Invoke-CheckPasswordPolicyAdvanced -Domain $Policy
+
+            if ($null -eq $Users) {
+                if ($UseMockData) {
+                    $Users = Get-MockUsers
+                } else {
+                    $Users = Get-ADHygieneUsers
+                }
+            }
+
+            $Findings += Test-KerberosPolicyExposure `
+                -Domain $Policy `
+                -Users $Users
         }
     }
 
+    # ---------------------------
+    # PRIVILEGED
+    # ---------------------------
     if ($RunPrivilegedChecks) {
         Write-Host "[4/7] Analyse des groupes privilégiés..."
 
@@ -146,6 +141,14 @@ function Invoke-AuditRunner {
             }
         }
 
+        if ($null -eq $Users) {
+            if ($UseMockData) {
+                $Users = Get-MockUsers
+            } else {
+                $Users = Get-ADHygieneUsers
+            }
+        }
+
         $Findings += Test-PrivilegedGroups -Groups $Groups
 
         Write-Host "[5/7] Analyse des comptes inactifs dans groupes privilégiés..."
@@ -153,15 +156,24 @@ function Invoke-AuditRunner {
         $Findings += Test-InactivePrivilegedUsers `
             -Groups $Groups `
             -InactiveDays $InactiveDays
+
+        $Findings += Test-PrivilegedAccountCompliance `
+            -Users $Users `
+            -Groups $Groups `
+            -InactiveDays $InactiveDays
     }
 
-
-
-    Write-Host "[5/7] Calcul du score global..."
+    # ---------------------------
+    # SCORE
+    # ---------------------------
+    Write-Host "[6/7] Calcul du score global..."
     $ScoreSummary = Get-ADHygieneScore -Findings $Findings
 
     Write-Host "Score global : $($ScoreSummary.Score)/100" -ForegroundColor Yellow
 
+    # ---------------------------
+    # REPORTS
+    # ---------------------------
     Write-Host "[7/7] Export des rapports..."
     Export-ADHygieneJsonReport `
         -Findings $Findings `

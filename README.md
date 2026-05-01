@@ -1,113 +1,176 @@
 # AD-Hygiene-Audit
 
-Outil PowerShell d’audit d’hygiène Active Directory (niveau 1 sécurité), conçu avec une architecture modulaire et extensible.
+Outil PowerShell d’audit d’hygiène Active Directory (niveau 1 sécurité), conçu avec une architecture modulaire, robuste et exploitable en entreprise.
+
+---
 
 ## 🎯 Objectif
 
-Identifier rapidement les faiblesses de base d’un Active Directory :
+Identifier rapidement les faiblesses classiques d’un Active Directory :
 
 - comptes inactifs
-- mauvaises pratiques sur les mots de passe
+- mots de passe non conformes
 - exposition des comptes privilégiés
+- configuration domaine à risque
 
 L’outil est conçu pour être :
 
-- simple à exécuter
-- lisible dans ses résultats
-- extensible par ajout de checks
+- ✅ simple à exécuter
+- ✅ lisible dans ses résultats
+- ✅ modulaire (ajout de checks facile)
+- ✅ compatible environnement de test (mode Mock)
 
 ---
 
-## 🏗️ Architecture
+⚡ Quick Start (5 minutes)
 
-Le projet est structuré en modules :
+1️⃣ Cloner le projet
 
-- **Collectors** : récupération des données (AD ou Mock)
-- **Checks** : règles d’audit indépendantes
-- **Core** : orchestration (AuditRunner, Scoring)
-- **Reports** : export des résultats (JSON, CSV)
-- **Utils** : fonctions utilitaires (à venir)
-
-⚠️ Règle clé :
-
-> Les Collectors sont la source unique de données.  
-> Les Checks ne doivent jamais interroger directement l’AD.
-
----
-
-## 🚀 Installation
-
-### Prérequis
-
-- PowerShell 7+
-- Accès Active Directory (si mode réel)
-- Module ActiveDirectory (RSAT) pour le mode AD
-
-### Cloner le projet
-
-```bash
 git clone https://github.com/<user>/AD-Hygiene-Audit.git
 cd AD-Hygiene-Audit
-```
 
-▶️ Utilisation
-Mode Mock (recommandé pour test)
+2️⃣ Tester immédiatement (mode Mock)
+
+👉 Aucun prérequis AD nécessaire
 pwsh -File ./Invoke-ADHygieneAudit.ps1 `  -UseMockData`
 -OutputPath ./outputs `  -InactiveDays 90`
 -Mode Full
-Modes disponibles
-Mode Description
-Full Tous les checks
-Daily Identique à Full (prévu pour planification)
-UsersOnly Checks utilisateurs uniquement
-PrivilegedOnly Checks groupes privilégiés uniquement
+✔️ Résultat : un audit complet simulé est généré dans outputs/
 
-📊 Résultats
-Les rapports sont générés dans le dossier outputs/ :
-JSON : vue globale + scoring
-CSV : un fichier par finding
-Exemple :
+3️⃣ Lire les résultats
+
 outputs/
 ├── report.json
 ├── AD-USR-001-InactiveUsers.csv
-├── AD-PRIV-001-PrivilegedGroups-Domain_Admins.csv
+├── AD-PRIV-001-PrivilegedGroups.csv
+
+🔐 Connexion à un Active Directory (mode réel)
+Prérequis
+PowerShell 7+
+RSAT / Module ActiveDirectory installé
+Accès réseau à l’AD
+
+1️⃣ Créer un fichier de credentials sécurisé
+
+Get-Credential | Export-Clixml -Path ./cred.xml
+👉 Cela stocke ton compte AD de manière chiffrée
+
+2️⃣ Lancer l’audit en mode réel
+
+pwsh -File ./Invoke-ADHygieneAudit.ps1 `  -CredentialPath ./cred.xml`
+-OutputPath ./outputs `  -InactiveDays 90`
+-Mode Full
+
+🔁 Désactiver le mode Mock
+
+👉 NE PAS utiliser :
+-UseMockData
+👉 Le mode AD réel est automatiquement utilisé si :
+-UseMockData est absent
+-CredentialPath est fourni
+
+## 🚀 QuickStart détaillé
+
+Un guide pas-à-pas est disponible ici :
+
+[docs/QuickStart.md](docs/QuickStart.md)
+
+🏗️ Architecture
+
+Le projet est structuré en modules :
+Collectors
+Source unique de données (AD ou Mock)
+Checks
+Règles d’audit indépendantes
+Core
+Orchestration (AuditRunner, ScoringEngine)
+Reports
+Export JSON + CSV
+
+⚠️ Règles fondamentales
+✔️ Les Collectors sont la seule source de données
+❌ Les Checks ne doivent jamais interroger l’AD
+✔️ Le mode Mock doit toujours fonctionner
+
+▶️ Modes d’exécution
+
+Mode Description
+Full Tous les checks
+Daily Identique à Full (planification)
+UsersOnly Utilisateurs uniquement
+PrivilegedOnly Comptes à privilèges
+
+📊 Résultats
+
+JSON
+vue globale
+scoring
+synthèse
+CSV
+un fichier par check
+exploitable Excel / SIEM
 
 📈 Scoring
-Un score global est calculé avec un niveau de maturité :
-A : Très bon niveau
-B : Bon niveau
-C : Moyen
-D : Faible
-E : Critique
 
-🧪 Mode Mock
+Score Niveau
+A Très bon
+B Bon
+C Moyen
+D Faible
+E Critique
+
+🧪 Mode Mock (important)
+
 Le mode Mock permet de :
 tester sans AD
 développer de nouveaux checks
 valider les exports
+Activation :
 -UseMockData
 
 ➕ Ajouter un check
-Créer un fichier dans src/Checks/...
+
+Étapes
+Créer un fichier dans :
+src/Checks/<Category>/
 Respecter le format de sortie (Finding)
-L’ajouter dans AuditRunner.ps1
+Ajouter le check dans :
+AuditRunner.ps1
 
-⚠️ Contraintes :
+⚠️ Contraintes
+
 un check = une responsabilité
-aucune dépendance directe à l’AD
-utiliser uniquement les données des Collectors
+aucun appel direct à l’AD
+utiliser uniquement les données Collectors
 
-📌 Checks actuellement disponibles
-Voir docs/checks.md
+📌 Checks disponibles
+
+Voir :
+docs/checks.md
 
 📅 Roadmap
+
 Activation du ConfigPath
-Ajout checks Computers
-Ajout checks Domain
-Ajout checks Kerberos
+Ajout checks avancés (AD Tiering, ACL, GPO)
 Export HTML / Markdown
-Ajout de tests automatisés
+Ajout tests automatisés
+Intégration CI/CD
 
 ⚠️ Avertissement
-Cet outil fournit un audit de premier niveau uniquement.
-Il ne remplace pas un audit de sécurité complet.
+
+Cet outil fournit un audit de premier niveau.
+
+👉 Il ne remplace pas :
+un audit de sécurité complet
+une revue d’architecture AD
+un audit Red Team / Pentest
+
+🤝 Contribution
+Les contributions sont les bienvenues :
+nouveaux checks
+amélioration des exports
+optimisation des performances
+
+📬 Support
+Projet interne / expérimental.
+Adapter selon votre contexte entreprise.

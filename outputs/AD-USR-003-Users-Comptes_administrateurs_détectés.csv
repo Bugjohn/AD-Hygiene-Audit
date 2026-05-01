@@ -1,0 +1,3 @@
+"SamAccountName";"Name";"Enabled";"LastLogonDate";"PasswordLastSet";"Created";"DistinguishedName"
+"admin";"Administrateur";"True";"21/04/2026 15:17:08";;;
+"jdupont";"Jean Dupont";"True";"21/04/2026 15:17:08";;;"CN=Jean Dupont,OU=Users,DC=lab,DC=local"

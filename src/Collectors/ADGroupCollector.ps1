@@ -5,6 +5,21 @@ function Get-ADHygienePrivilegedGroups {
     }
 
     Import-Module ActiveDirectory
+    $CredentialFile = $Config.activeDirectory.credentialFile
+
+    if ([string]::IsNullOrWhiteSpace($CredentialFile)) {
+        throw "Aucun fichier de credential Active Directory n'est configuré (activeDirectory.credentialFile)."
+    }
+
+    if (-not (Test-Path -Path $CredentialFile)) {
+        throw "Fichier de credential Active Directory introuvable : $CredentialFile"
+    }
+
+    $Credential = Import-Clixml -Path $CredentialFile
+
+    if ($null -eq $Credential -or -not ($Credential -is [System.Management.Automation.PSCredential]) -or [string]::IsNullOrWhiteSpace($Credential.UserName)) {
+        throw "Impossible de charger le credential depuis $CredentialFile"
+    }
 
     $PrivilegedGroups = @(
         "Domain Admins",
@@ -23,11 +38,11 @@ function Get-ADHygienePrivilegedGroups {
     foreach ($GroupName in $PrivilegedGroups) {
 
         try {
-            $Members = Get-ADGroupMember -Identity $GroupName -Recursive | ForEach-Object {
+            $Members = Get-ADGroupMember -Identity $GroupName -Recursive -Credential $Credential | ForEach-Object {
 
                 if ($_.objectClass -eq "user") {
 
-                    $User = Get-ADUser $_.SamAccountName -Properties Enabled, LastLogonDate
+                    $User = Get-ADUser $_.SamAccountName -Credential $Credential -Properties Enabled, LastLogonDate
 
                     [PSCustomObject]@{
                         SamAccountName = $User.SamAccountName
