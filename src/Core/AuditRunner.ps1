@@ -30,10 +30,65 @@ function Invoke-AuditRunner {
     $Groups = $null
     $Users = $null
 
-    $RunUserChecks = $Mode -in @("Full", "Daily", "UsersOnly")
-    $RunPrivilegedChecks = $Mode -in @("Full", "Daily", "PrivilegedOnly")
-    $RunComputerChecks = $Mode -in @("Full", "Daily")
-    $RunDomainChecks = $Mode -in @("Full", "Daily")
+    function Test-ConfigFlagEnabled {
+        param(
+            [object]$Section,
+            [string]$Name
+        )
+
+        if ($null -eq $Section) {
+            return $true
+        }
+
+        $Property = $Section.PSObject.Properties[$Name]
+
+        if ($null -eq $Property -or $null -eq $Property.Value) {
+            return $true
+        }
+
+        return [bool]$Property.Value
+    }
+
+    $ChecksConfig = $Config.checks
+    $ReportsConfig = $Config.reports
+
+    $RunInactiveUsersCheck = Test-ConfigFlagEnabled -Section $ChecksConfig.users -Name "inactiveUsers"
+    $RunPasswordNeverExpiresCheck = Test-ConfigFlagEnabled -Section $ChecksConfig.users -Name "passwordNeverExpires"
+    $RunAdminUsersCheck = Test-ConfigFlagEnabled -Section $ChecksConfig.users -Name "adminUsers"
+
+    $RunPrivilegedGroupMembersCheck = Test-ConfigFlagEnabled -Section $ChecksConfig.privilegedGroups -Name "members"
+    $RunInactivePrivilegedMembersCheck = Test-ConfigFlagEnabled -Section $ChecksConfig.privilegedGroups -Name "inactiveMembers"
+    $RunPrivilegedAccountComplianceCheck = Test-ConfigFlagEnabled -Section $ChecksConfig.privilegedGroups -Name "accountCompliance"
+
+    $RunInactiveComputersCheck = Test-ConfigFlagEnabled -Section $ChecksConfig.computers -Name "inactiveComputers"
+    $RunObsoleteOperatingSystemsCheck = Test-ConfigFlagEnabled -Section $ChecksConfig.computers -Name "obsoleteOperatingSystems"
+
+    $RunPasswordPolicyCheck = Test-ConfigFlagEnabled -Section $ChecksConfig.domain -Name "passwordPolicy"
+    $RunPasswordPolicyAdvancedCheck = Test-ConfigFlagEnabled -Section $ChecksConfig.domain -Name "passwordPolicyAdvanced"
+    $RunKerberosPolicyExposureCheck = Test-ConfigFlagEnabled -Section $ChecksConfig.domain -Name "kerberosPolicyExposure"
+
+    $ExportJsonReport = Test-ConfigFlagEnabled -Section $ReportsConfig -Name "json"
+    $ExportCsvReport = Test-ConfigFlagEnabled -Section $ReportsConfig -Name "csv"
+
+    $RunUserChecks = ($Mode -in @("Full", "Daily", "UsersOnly")) -and (
+        $RunInactiveUsersCheck -or
+        $RunPasswordNeverExpiresCheck -or
+        $RunAdminUsersCheck
+    )
+    $RunPrivilegedChecks = ($Mode -in @("Full", "Daily", "PrivilegedOnly")) -and (
+        $RunPrivilegedGroupMembersCheck -or
+        $RunInactivePrivilegedMembersCheck -or
+        $RunPrivilegedAccountComplianceCheck
+    )
+    $RunComputerChecks = ($Mode -in @("Full", "Daily")) -and (
+        $RunInactiveComputersCheck -or
+        $RunObsoleteOperatingSystemsCheck
+    )
+    $RunDomainChecks = ($Mode -in @("Full", "Daily")) -and (
+        $RunPasswordPolicyCheck -or
+        $RunPasswordPolicyAdvancedCheck -or
+        $RunKerberosPolicyExposureCheck
+    )
 
     # ---------------------------
     # USERS
@@ -47,27 +102,33 @@ function Invoke-AuditRunner {
             $Users = Get-ADHygieneUsers
         }
 
-        Write-Host "[2/7] Analyse des comptes inactifs..."
-        $Findings += Test-InactiveUsers `
-            -Users $Users `
-            -InactiveDays $InactiveDays
-
-        Write-Host "[3/7] Analyse PasswordNeverExpires..."
-        $Findings += Test-PasswordNeverExpires -Users $Users
-
-        Write-Host "[4/7] Analyse des comptes administrateurs..."
-
-        if ($null -eq $Groups) {
-            if ($UseMockData) {
-                $Groups = Get-MockPrivilegedGroups
-            } else {
-                $Groups = Get-ADHygienePrivilegedGroups
-            }
+        if ($RunInactiveUsersCheck) {
+            Write-Host "[2/7] Analyse des comptes inactifs..."
+            $Findings += Test-InactiveUsers `
+                -Users $Users `
+                -InactiveDays $InactiveDays
         }
 
-        $Findings += Test-AdminUsers `
-            -Users $Users `
-            -Groups $Groups
+        if ($RunPasswordNeverExpiresCheck) {
+            Write-Host "[3/7] Analyse PasswordNeverExpires..."
+            $Findings += Test-PasswordNeverExpires -Users $Users
+        }
+
+        if ($RunAdminUsersCheck) {
+            Write-Host "[4/7] Analyse des comptes administrateurs..."
+
+            if ($null -eq $Groups) {
+                if ($UseMockData) {
+                    $Groups = Get-MockPrivilegedGroups
+                } else {
+                    $Groups = Get-ADHygienePrivilegedGroups
+                }
+            }
+
+            $Findings += Test-AdminUsers `
+                -Users $Users `
+                -Groups $Groups
+        }
     }
 
     # ---------------------------
@@ -85,12 +146,16 @@ function Invoke-AuditRunner {
             $Computers = @()
         }
 
-        $Findings += Test-InactiveComputers `
-            -Computers $Computers `
-            -InactiveDays $InactiveDays
+        if ($RunInactiveComputersCheck) {
+            $Findings += Test-InactiveComputers `
+                -Computers $Computers `
+                -InactiveDays $InactiveDays
+        }
 
-        Write-Host "[5/7] Analyse des systèmes d'exploitation obsolètes..."
-        $Findings += Test-ObsoleteOperatingSystems -Computers $Computers
+        if ($RunObsoleteOperatingSystemsCheck) {
+            Write-Host "[5/7] Analyse des systèmes d'exploitation obsolètes..."
+            $Findings += Test-ObsoleteOperatingSystems -Computers $Computers
+        }
     }
 
     # ---------------------------
@@ -109,21 +174,27 @@ function Invoke-AuditRunner {
         }
 
         if ($Policy) {
-            $Findings += Test-PasswordPolicy -Policy $Policy
-
-            $Findings += Invoke-CheckPasswordPolicyAdvanced -Domain $Policy
-
-            if ($null -eq $Users) {
-                if ($UseMockData) {
-                    $Users = Get-MockUsers
-                } else {
-                    $Users = Get-ADHygieneUsers
-                }
+            if ($RunPasswordPolicyCheck) {
+                $Findings += Test-PasswordPolicy -Policy $Policy
             }
 
-            $Findings += Test-KerberosPolicyExposure `
-                -Domain $Policy `
-                -Users $Users
+            if ($RunPasswordPolicyAdvancedCheck) {
+                $Findings += Invoke-CheckPasswordPolicyAdvanced -Domain $Policy
+            }
+
+            if ($RunKerberosPolicyExposureCheck) {
+                if ($null -eq $Users) {
+                    if ($UseMockData) {
+                        $Users = Get-MockUsers
+                    } else {
+                        $Users = Get-ADHygieneUsers
+                    }
+                }
+
+                $Findings += Test-KerberosPolicyExposure `
+                    -Domain $Policy `
+                    -Users $Users
+            }
         }
     }
 
@@ -149,18 +220,24 @@ function Invoke-AuditRunner {
             }
         }
 
-        $Findings += Test-PrivilegedGroups -Groups $Groups
+        if ($RunPrivilegedGroupMembersCheck) {
+            $Findings += Test-PrivilegedGroups -Groups $Groups
+        }
 
-        Write-Host "[5/7] Analyse des comptes inactifs dans groupes privilégiés..."
+        if ($RunInactivePrivilegedMembersCheck) {
+            Write-Host "[5/7] Analyse des comptes inactifs dans groupes privilégiés..."
 
-        $Findings += Test-InactivePrivilegedUsers `
-            -Groups $Groups `
-            -InactiveDays $InactiveDays
+            $Findings += Test-InactivePrivilegedUsers `
+                -Groups $Groups `
+                -InactiveDays $InactiveDays
+        }
 
-        $Findings += Test-PrivilegedAccountCompliance `
-            -Users $Users `
-            -Groups $Groups `
-            -InactiveDays $InactiveDays
+        if ($RunPrivilegedAccountComplianceCheck) {
+            $Findings += Test-PrivilegedAccountCompliance `
+                -Users $Users `
+                -Groups $Groups `
+                -InactiveDays $InactiveDays
+        }
     }
 
     # ---------------------------
@@ -175,12 +252,16 @@ function Invoke-AuditRunner {
     # REPORTS
     # ---------------------------
     Write-Host "[7/7] Export des rapports..."
-    Export-ADHygieneJsonReport `
-        -Findings $Findings `
-        -ScoreSummary $ScoreSummary `
-        -OutputPath $OutputPath
+    if ($ExportJsonReport) {
+        Export-ADHygieneJsonReport `
+            -Findings $Findings `
+            -ScoreSummary $ScoreSummary `
+            -OutputPath $OutputPath
+    }
 
-    Export-ADHygieneCsvReport `
-        -Findings $Findings `
-        -OutputPath $OutputPath
+    if ($ExportCsvReport) {
+        Export-ADHygieneCsvReport `
+            -Findings $Findings `
+            -OutputPath $OutputPath
+    }
 }
