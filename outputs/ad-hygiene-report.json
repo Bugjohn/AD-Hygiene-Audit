@@ -1,0 +1,124 @@
+{
+  "GeneratedAt": "2026-05-01 00:55:29",
+  "Tool": "AD-Hygiene-Audit",
+  "ScoreSummary": {
+    "Score": 0,
+    "Critical": 3,
+    "High": 1,
+    "Medium": 1,
+    "Low": 0,
+    "Info": 0
+  },
+  "Findings": [
+    {
+      "Id": "AD-USR-001",
+      "Category": "Users",
+      "Title": "Comptes utilisateurs actifs mais inactifs",
+      "Severity": "Medium",
+      "Risk": "Des comptes dormants peuvent être utilisés par un attaquant s’ils sont compromis.",
+      "Recommendation": "Désactiver, supprimer ou justifier les comptes inactifs.",
+      "Count": 2,
+      "Items": [
+        {
+          "SamAccountName": "mmartin",
+          "Name": "Marie Martin",
+          "Enabled": true,
+          "LastLogonDate": "2025-10-13T00:55:29.014635+02:00",
+          "PasswordLastSet": "2025-07-05T00:55:29.014673+02:00",
+          "Created": "2023-05-01T00:55:29.014708+02:00",
+          "DistinguishedName": "CN=Marie Martin,OU=Users,DC=lab,DC=local"
+        },
+        {
+          "SamAccountName": "service_backup",
+          "Name": "Service Backup",
+          "Enabled": true,
+          "LastLogonDate": null,
+          "PasswordLastSet": "2025-03-27T00:55:29.01476+01:00",
+          "PasswordNeverExpires": true,
+          "Created": "2021-05-01T00:55:29.014795+02:00",
+          "DistinguishedName": "CN=Service Backup,OU=Service,DC=lab,DC=local"
+        }
+      ]
+    },
+    {
+      "Id": "AD-USR-002",
+      "Category": "Users",
+      "Title": "Comptes avec mot de passe qui n'expire jamais",
+      "Severity": "High",
+      "Risk": "Un mot de passe permanent augmente fortement le risque de compromission durable.",
+      "Recommendation": "Limiter aux comptes de service documentés et appliquer une rotation régulière.",
+      "Count": 2,
+      "Items": [
+        {
+          "SamAccountName": "jdupont",
+          "Name": "Jean Dupont",
+          "Enabled": true,
+          "LastLogonDate": "2026-04-21T00:55:29.014456+02:00",
+          "PasswordLastSet": "2026-04-01T00:55:29.014515+02:00",
+          "PasswordNeverExpires": true,
+          "Created": "2024-05-01T00:55:29.014554+02:00",
+          "DistinguishedName": "CN=Jean Dupont,OU=Users,DC=lab,DC=local"
+        },
+        {
+          "SamAccountName": "service_backup",
+          "Name": "Service Backup",
+          "Enabled": true,
+          "LastLogonDate": null,
+          "PasswordLastSet": "2025-03-27T00:55:29.01476+01:00",
+          "PasswordNeverExpires": true,
+          "Created": "2021-05-01T00:55:29.014795+02:00",
+          "DistinguishedName": "CN=Service Backup,OU=Service,DC=lab,DC=local"
+        }
+      ]
+    },
+    {
+      "Id": "AD-PRIV-001",
+      "Category": "PrivilegedGroups",
+      "Title": "Membres du groupe Administrators",
+      "Severity": "Critical",
+      "Risk": "Les membres de ce groupe disposent de privilèges élevés pouvant compromettre tout le SI.",
+      "Recommendation": "Limiter strictement les membres et privilégier des comptes dédiés.",
+      "Count": 1,
+      "Items": [
+        {
+          "SamAccountName": "admin",
+          "Name": "Administrateur"
+        }
+      ]
+    },
+    {
+      "Id": "AD-PRIV-001",
+      "Category": "PrivilegedGroups",
+      "Title": "Membres du groupe Domain Admins",
+      "Severity": "Critical",
+      "Risk": "Les membres de ce groupe disposent de privilèges élevés pouvant compromettre tout le SI.",
+      "Recommendation": "Limiter strictement les membres et privilégier des comptes dédiés.",
+      "Count": 2,
+      "Items": [
+        {
+          "SamAccountName": "admin",
+          "Name": "Administrateur"
+        },
+        {
+          "SamAccountName": "jdupont",
+          "Name": "Jean Dupont"
+        }
+      ]
+    },
+    {
+      "Id": "AD-PRIV-001",
+      "Category": "PrivilegedGroups",
+      "Title": "Membres du groupe Enterprise Admins",
+      "Severity": "Critical",
+      "Risk": "Les membres de ce groupe disposent de privilèges élevés pouvant compromettre tout le SI.",
+      "Recommendation": "Limiter strictement les membres et privilégier des comptes dédiés.",
+      "Count": 1,
+      "Items": [
+        {
+          "SamAccountName": "admin",
+          "Name": "Administrateur"
+        }
+      ]
+    }
+  ]
+}
