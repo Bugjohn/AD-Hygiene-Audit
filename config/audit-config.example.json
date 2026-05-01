@@ -33,7 +33,7 @@
       "obsoleteOperatingSystems": false
     },
     "domain": {
-      "passwordPolicy": false,
+      "passwordPolicy": true,
       "lockoutPolicy": false,
       "functionalLevel": false
     },
@@ -47,7 +47,8 @@
     "AD-USR-002": "High",
     "AD-USR-003": "High",
     "AD-PRIV-001": "Info",
-    "AD-PRIV-002": "High"
+    "AD-PRIV-002": "High",
+    "AD-DOM-001": "Info"
   },
   "reports": {
     "json": true,

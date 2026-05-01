@@ -87,3 +87,6 @@ Le format est inspiré de "Keep a Changelog" et respecte le versioning sémantiq
 
 - Added AD-COMP-001 check to identify inactive computer accounts.
 - Added Mock and AD computer collectors.
+
+- Added AD-DOM-001 check to expose the Active Directory password policy.
+- Added Mock and AD domain collectors.

@@ -123,6 +123,28 @@ Identifie les comptes ordinateurs dont la dernière connexion dépasse le seuil 
 
 ---
 
+### AD-DOM-001 — Password Policy du domaine
+
+**Description :**
+Lit la stratégie de mot de passe du domaine Active Directory.
+
+**Données collectées :**
+
+- Longueur minimale du mot de passe
+- Complexité activée ou non
+- Durée maximale du mot de passe
+- Durée minimale du mot de passe
+- Seuil de verrouillage
+- Durée de verrouillage
+
+**Risque :**
+
+- Politique de mot de passe trop faible
+- Absence de complexité
+- Durée excessive des mots de passe
+
+---
+
 ## 📌 Convention de nommage
 
 Format :

@@ -1,7 +1,10 @@
 . "$PSScriptRoot/../Checks/Users/Check-AdminUsers.ps1"
 . "$PSScriptRoot/../Checks/Computers/Check-InactiveComputers.ps1"
+. "$PSScriptRoot/../Checks/Domain/Check-PasswordPolicy.ps1"
 . "$PSScriptRoot/../Collectors/MockComputerCollector.ps1"
 . "$PSScriptRoot/../Collectors/ADComputerCollector.ps1"
+. "$PSScriptRoot/../Collectors/MockDomainCollector.ps1"
+. "$PSScriptRoot/../Collectors/ADDomainCollector.ps1"
 
 <# A réactiver en prod 
 function Invoke-AuditRunner {
@@ -60,6 +63,7 @@ function Invoke-AuditRunner {
     $RunUserChecks = $Mode -in @("Full", "Daily", "UsersOnly")
     $RunPrivilegedChecks = $Mode -in @("Full", "Daily", "PrivilegedOnly")
     $RunComputerChecks = $Mode -in @("Full", "Daily")
+    $RunDomainChecks = $Mode -in @("Full", "Daily")
 
     if ($RunUserChecks) {
         Write-Host "[1/7] Collecte des utilisateurs..."
@@ -108,6 +112,23 @@ function Invoke-AuditRunner {
         $Findings += Test-InactiveComputers `
             -Computers $Computers `
             -InactiveDays $InactiveDays
+    }
+
+    if ($RunDomainChecks) {
+        Write-Host "[5/7] Lecture de la Password Policy..."
+
+        if ($UseMockData) {
+            $Policy = Get-MockPasswordPolicy
+        } elseif (Get-Command Get-ADHygienePasswordPolicy -ErrorAction SilentlyContinue) {
+            $Policy = Get-ADHygienePasswordPolicy
+        } else {
+            Write-Warning "Collecteur domain indisponible"
+            $Policy = $null
+        }
+
+        if ($Policy) {
+            $Findings += Test-PasswordPolicy -Policy $Policy
+        }
     }
 
     if ($RunPrivilegedChecks) {
