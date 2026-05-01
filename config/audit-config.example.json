@@ -27,8 +27,7 @@
     "privilegedGroups": {
       "members": true,
       "inactiveMembers": true,
-      "accountCompliance": true,
-      "nestedGroups": false
+      "accountCompliance": true
     },
     "computers": {
       "inactiveComputers": true,
@@ -37,42 +36,13 @@
     "domain": {
       "passwordPolicy": true,
       "passwordPolicyAdvanced": true,
-      "kerberosPolicyExposure": true,
-      "lockoutPolicy": false,
-      "functionalLevel": false
-    },
-    "kerberos": {
-      "serviceAccountsWithSpn": false,
-      "unconstrainedDelegation": false
+      "kerberosPolicyExposure": true
     }
-  },
-  "severity": {
-    "AD-USR-001": "Medium",
-    "AD-USR-002": "High",
-    "AD-USR-003": "High",
-    "AD-PRIV-001": "Info",
-    "AD-PRIV-002": "High",
-    "AD-PRIV-003": "High",
-    "AD-DOM-001": "Info",
-    "AD-DOM-002": "Medium",
-    "AD-DOM-003": "High",
-    "AD-COMP-001": "Medium",
-    "AD-COMP-002": "High"
   },
   "reports": {
     "json": true,
     "csv": true,
     "html": false,
     "markdown": false
-  },
-  "scoring": {
-    "enabled": true,
-    "levels": {
-      "A": "Très bon niveau d’hygiène",
-      "B": "Bon niveau d’hygiène",
-      "C": "Niveau moyen",
-      "D": "Niveau faible",
-      "E": "Niveau critique"
-    }
   }
 }
