@@ -88,13 +88,13 @@ pwsh -File ./Invoke-ADHygieneAudit.ps1 `
 
 Parametres principaux :
 
-| Parametre | Role |
-| --- | --- |
-| `-UseMockData` | Utilise les donnees de test du MVP |
-| `-OutputPath ./outputs` | Dossier ou seront generes les rapports |
-| `-InactiveDays 90` | Seuil d'inactivite en jours |
-| `-Mode Full` | Lance tous les checks disponibles |
-| `-ConfigPath ./config/audit-config.example.json` | Charge une configuration explicite |
+| Parametre                                        | Role                                   |
+| ------------------------------------------------ | -------------------------------------- |
+| `-UseMockData`                                   | Utilise les donnees de test du MVP     |
+| `-OutputPath ./outputs`                          | Dossier ou seront generes les rapports |
+| `-InactiveDays 90`                               | Seuil d'inactivite en jours            |
+| `-Mode Full`                                     | Lance tous les checks disponibles      |
+| `-ConfigPath ./config/audit-config.example.json` | Charge une configuration explicite     |
 
 ## 5. Verifier les resultats Mock
 
@@ -150,13 +150,13 @@ Le scoring reel est numerique, de `0` a `100`.
 
 La base est `100`, puis des penalites sont appliquees selon la severite et le nombre d'elements detectes :
 
-| Severite | Penalite par element |
-| --- | ---: |
-| `Critical` | 20 |
-| `High` | 10 |
-| `Medium` | 5 |
-| `Low` | 2 |
-| `Info` | 0 |
+| Severite   | Penalite par element |
+| ---------- | -------------------: |
+| `Critical` |                   20 |
+| `High`     |                   10 |
+| `Medium`   |                    5 |
+| `Low`      |                    2 |
+| `Info`     |                    0 |
 
 Le JSON contient aussi un resume par severite : `Critical`, `High`, `Medium`, `Low`, `Info`.
 
@@ -177,17 +177,21 @@ Les parametres passes en ligne de commande restent prioritaires sur les valeurs 
 
 Le mode AD reel est prepare dans le code, mais il n'est pas encore valide pour ce MVP. Pour une execution AD reelle, le chemin du credential doit etre defini dans la configuration avec `activeDirectory.credentialFile`.
 
-Creer le credential au chemin attendu par la configuration d'exemple :
+### 🔐 Préparation des credentials Active Directory
+
+Exécutez la commande suivante :
 
 ```powershell
 Get-Credential | Export-Clixml -Path ./config/ad-credential.xml
 ```
 
-Ce fichier :
-
-- ne doit pas etre partage ;
-- ne fonctionne que pour l'utilisateur Windows qui l'a cree ;
-- ne doit pas etre commite dans Git.
+Une fenêtre s’ouvre : saisissez un compte Active Directory (ex: DOMAINE\admin) et son mot de passe.
+👉 Le fichier ad-credential.xml est généré automatiquement.
+Vous n’avez rien à modifier manuellement.
+Ce fichier contient les identifiants chiffrés et ne peut être utilisé que :
+par le même utilisateur
+sur la même machine
+⚠️ Ne jamais versionner ce fichier dans Git.
 
 Verifier le fichier :
 
@@ -200,6 +204,18 @@ Resultat attendu :
 ```text
 True
 ```
+
+🧠 Pourquoi on fait ça ?
+Éviter :
+
+$cred = New-Object PSCredential("admin", (ConvertTo-SecureString "password" -AsPlainText -Force))
+
+👉 (ça = 🔥 catastrophe sécurité dans un repo Git)
+
+À la place :
+✔️ Pas de mot de passe en clair
+✔️ Compatible automatisation
+✔️ Réutilisable par le script
 
 Lancer l'audit en utilisant une configuration :
 
@@ -215,11 +231,11 @@ Important : le mode Mock est active uniquement si la commande contient `-UseMock
 
 ## 10. Modes disponibles
 
-| Mode | Description |
-| --- | --- |
-| `Full` | Lance tous les checks disponibles |
-| `Daily` | Mode prevu pour execution planifiee |
-| `UsersOnly` | Lance uniquement les checks utilisateurs |
+| Mode             | Description                                     |
+| ---------------- | ----------------------------------------------- |
+| `Full`           | Lance tous les checks disponibles               |
+| `Daily`          | Mode prevu pour execution planifiee             |
+| `UsersOnly`      | Lance uniquement les checks utilisateurs        |
 | `PrivilegedOnly` | Lance uniquement les checks lies aux privileges |
 
 Exemple utilisateurs uniquement en Mock :
