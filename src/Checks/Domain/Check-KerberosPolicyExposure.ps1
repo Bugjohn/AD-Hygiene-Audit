@@ -23,7 +23,12 @@ function Test-KerberosPolicyExposure {
             return $Value.TotalMinutes
         }
 
-        return [double]$Value
+        try {
+            return [double]$Value
+        }
+        catch {
+            return $null
+        }
     }
 
     if ($Domain) {
@@ -34,9 +39,15 @@ function Test-KerberosPolicyExposure {
                 Category       = "Domain"
                 Title          = "Duree des tickets utilisateur trop longue"
                 Severity       = "Medium"
+                Status         = "NonCompliant"
                 Description    = "MaxTicketAge depasse 10 heures."
                 Recommendation = "Configurer MaxTicketAge a 10 heures ou moins."
                 Count          = 1
+                Data           = [PSCustomObject]@{
+                    Field    = "MaxTicketAge"
+                    Expected = "<= 10 heures"
+                    Actual   = $MaxTicketAge
+                }
             }
         }
 
@@ -47,9 +58,15 @@ function Test-KerberosPolicyExposure {
                 Category       = "Domain"
                 Title          = "Duree de renouvellement Kerberos trop longue"
                 Severity       = "Medium"
+                Status         = "NonCompliant"
                 Description    = "MaxRenewAge depasse 7 jours."
                 Recommendation = "Configurer MaxRenewAge a 7 jours ou moins."
                 Count          = 1
+                Data           = [PSCustomObject]@{
+                    Field    = "MaxRenewAge"
+                    Expected = "<= 7 jours"
+                    Actual   = $MaxRenewAge
+                }
             }
         }
 
@@ -60,9 +77,15 @@ function Test-KerberosPolicyExposure {
                 Category       = "Domain"
                 Title          = "Duree des tickets de service trop longue"
                 Severity       = "Medium"
+                Status         = "NonCompliant"
                 Description    = "MaxServiceAge depasse 600 minutes."
                 Recommendation = "Configurer MaxServiceAge a 600 minutes ou moins."
                 Count          = 1
+                Data           = [PSCustomObject]@{
+                    Field    = "MaxServiceAge"
+                    Expected = "<= 600 minutes"
+                    Actual   = $MaxServiceAge
+                }
             }
         }
     }
@@ -77,6 +100,7 @@ function Test-KerberosPolicyExposure {
             Category       = "Domain"
             Title          = "Comptes avec SPN exposes au Kerberoasting"
             Severity       = "High"
+            Status         = "NonCompliant"
             Description    = "Comptes disposant d'un ServicePrincipalName, augmentant la surface Kerberoasting."
             Recommendation = "Limiter les SPN aux comptes necessaires et utiliser des mots de passe robustes ou gMSA."
             Count          = $UsersWithSpn.Count

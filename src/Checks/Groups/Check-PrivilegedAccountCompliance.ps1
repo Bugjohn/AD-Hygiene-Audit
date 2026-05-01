@@ -9,16 +9,18 @@ function Test-PrivilegedAccountCompliance {
     $LimitDate = (Get-Date).AddDays(-$InactiveDays)
     $PrivilegedAccounts = @{}
 
-    foreach ($GroupName in $Groups.Keys) {
-        foreach ($Member in @($Groups[$GroupName])) {
-            if (-not [string]::IsNullOrWhiteSpace($Member.SamAccountName)) {
-                $Key = $Member.SamAccountName.ToLowerInvariant()
+    if ($Groups) {
+        foreach ($GroupName in $Groups.Keys) {
+            foreach ($Member in @($Groups[$GroupName])) {
+                if (-not [string]::IsNullOrWhiteSpace($Member.SamAccountName)) {
+                    $Key = $Member.SamAccountName.ToLowerInvariant()
 
-                if (-not $PrivilegedAccounts.ContainsKey($Key)) {
-                    $PrivilegedAccounts[$Key] = @()
+                    if (-not $PrivilegedAccounts.ContainsKey($Key)) {
+                        $PrivilegedAccounts[$Key] = @()
+                    }
+
+                    $PrivilegedAccounts[$Key] += $GroupName
                 }
-
-                $PrivilegedAccounts[$Key] += $GroupName
             }
         }
     }
@@ -36,6 +38,7 @@ function Test-PrivilegedAccountCompliance {
             Category       = "Privileged"
             Title          = "Comptes administrateurs inactifs"
             Severity       = "High"
+            Status         = "NonCompliant"
             Description    = "Comptes avec AdminCount=1 sans activité récente selon le seuil configuré."
             Recommendation = "Vérifier la nécessité de ces comptes, puis les désactiver ou réduire leurs privilèges."
             Count          = $InactiveAdmins.Count
@@ -45,6 +48,7 @@ function Test-PrivilegedAccountCompliance {
 
     $ServiceAccountsInPrivilegedGroups = @($Users | Where-Object {
         -not [string]::IsNullOrWhiteSpace(($_.ServicePrincipalName -join "")) -and
+        -not [string]::IsNullOrWhiteSpace($_.SamAccountName) -and
         $PrivilegedAccounts.ContainsKey($_.SamAccountName.ToLowerInvariant())
     } | ForEach-Object {
         $Key = $_.SamAccountName.ToLowerInvariant()
@@ -61,6 +65,7 @@ function Test-PrivilegedAccountCompliance {
             Category       = "Privileged"
             Title          = "Comptes de service dans les groupes administrateurs"
             Severity       = "High"
+            Status         = "NonCompliant"
             Description    = "Comptes avec ServicePrincipalName membres de groupes privilégiés."
             Recommendation = "Retirer ces comptes des groupes administrateurs et appliquer une délégation minimale."
             Count          = $ServiceAccountsInPrivilegedGroups.Count
@@ -78,6 +83,7 @@ function Test-PrivilegedAccountCompliance {
             Category       = "Privileged"
             Title          = "Comptes administrateurs désactivés"
             Severity       = "Medium"
+            Status         = "NonCompliant"
             Description    = "Comptes désactivés conservant AdminCount=1."
             Recommendation = "Nettoyer les anciens privilèges et vérifier que ces comptes ne sont plus référencés."
             Count          = $DisabledAdmins.Count
