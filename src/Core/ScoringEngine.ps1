@@ -13,11 +13,34 @@ function Get-ADHygieneScore {
 
     $TotalPenalty = 0
 
-    foreach ($Finding in $Findings) {
+    function Get-FindingCount {
+        param(
+            [object]$Value
+        )
+
+        if ($null -eq $Value) {
+            return 0
+        }
+
+        try {
+            $Count = [int]$Value
+        }
+        catch {
+            return 0
+        }
+
+        if ($Count -lt 0) {
+            return 0
+        }
+
+        return $Count
+    }
+
+    foreach ($Finding in @($Findings)) {
         $Severity = [string]$Finding.Severity
-        $Count = [int]$Finding.Count
 
         if ($Weights.ContainsKey($Severity)) {
+            $Count = Get-FindingCount -Value $Finding.Count
             $TotalPenalty += ($Weights[$Severity] * $Count)
         }
     }
