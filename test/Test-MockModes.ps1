@@ -18,7 +18,7 @@ function Invoke-MockAuditTest {
         -InactiveDays 90 `
         -Mode $Mode
 
-    if (-not (Test-Path "$OutputPath/report.json")) {
+    if (-not (Test-Path "$OutputPath/ad-hygiene-report.json")) {
         throw "Report JSON manquant pour le mode $Mode"
     }
 

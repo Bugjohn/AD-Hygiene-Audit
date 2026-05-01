@@ -81,4 +81,9 @@ Le format est inspiré de "Keep a Changelog" et respecte le versioning sémantiq
 
 ## [Unreleased]
 
-- En cours de développement
+- ### Added
+
+- Added AD-USR-003 check to identify administrator user accounts based on privileged group membership.
+
+- Added AD-COMP-001 check to identify inactive computer accounts.
+- Added Mock and AD computer collectors.

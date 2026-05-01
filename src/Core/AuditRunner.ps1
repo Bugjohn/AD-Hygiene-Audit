@@ -1,3 +1,8 @@
+. "$PSScriptRoot/../Checks/Users/Check-AdminUsers.ps1"
+. "$PSScriptRoot/../Checks/Computers/Check-InactiveComputers.ps1"
+. "$PSScriptRoot/../Collectors/MockComputerCollector.ps1"
+. "$PSScriptRoot/../Collectors/ADComputerCollector.ps1"
+
 <# A réactiver en prod 
 function Invoke-AuditRunner {
     param(
@@ -51,8 +56,10 @@ function Invoke-AuditRunner {
     Write-Host ""
 
     $Findings = @()
+    $Groups = $null
     $RunUserChecks = $Mode -in @("Full", "Daily", "UsersOnly")
     $RunPrivilegedChecks = $Mode -in @("Full", "Daily", "PrivilegedOnly")
+    $RunComputerChecks = $Mode -in @("Full", "Daily")
 
     if ($RunUserChecks) {
         Write-Host "[1/7] Collecte des utilisateurs..."
@@ -70,15 +77,48 @@ function Invoke-AuditRunner {
     
         Write-Host "[3/7] Analyse PasswordNeverExpires..."
         $Findings += Test-PasswordNeverExpires -Users $Users
+
+        Write-Host "[4/7] Analyse des comptes administrateurs..."
+
+        if ($null -eq $Groups) {
+            if ($UseMockData) {
+                $Groups = Get-MockPrivilegedGroups
+            } else {
+                $Groups = Get-ADHygienePrivilegedGroups
+            }
+        }
+
+        $Findings += Test-AdminUsers `
+            -Users $Users `
+            -Groups $Groups
+    }
+
+    if ($RunComputerChecks) {
+        Write-Host "[5/7] Analyse des ordinateurs inactifs..."
+
+        if ($UseMockData) {
+            $Computers = Get-MockComputers
+        } elseif (Get-Command Get-ADHygieneComputers -ErrorAction SilentlyContinue) {
+            $Computers = Get-ADHygieneComputers
+        } else {
+            Write-Warning "Collecteur ordinateurs indisponible. Le check AD-COMP-001 est ignoré."
+            $Computers = @()
+        }
+
+        $Findings += Test-InactiveComputers `
+            -Computers $Computers `
+            -InactiveDays $InactiveDays
     }
 
     if ($RunPrivilegedChecks) {
         Write-Host "[4/7] Analyse des groupes privilégiés..."
 
-        if ($UseMockData) {
-            $Groups = Get-MockPrivilegedGroups
-        } else {
-            $Groups = Get-ADHygienePrivilegedGroups
+        if ($null -eq $Groups) {
+            if ($UseMockData) {
+                $Groups = Get-MockPrivilegedGroups
+            } else {
+                $Groups = Get-ADHygienePrivilegedGroups
+            }
         }
 
         $Findings += Test-PrivilegedGroups -Groups $Groups

@@ -21,7 +21,7 @@
     "users": {
       "inactiveUsers": true,
       "passwordNeverExpires": true,
-      "adminUsers": false
+      "adminUsers": true
     },
     "privilegedGroups": {
       "members": true,
@@ -29,7 +29,7 @@
       "nestedGroups": false
     },
     "computers": {
-      "inactiveComputers": false,
+      "inactiveComputers": true,
       "obsoleteOperatingSystems": false
     },
     "domain": {
@@ -45,6 +45,7 @@
   "severity": {
     "AD-USR-001": "Medium",
     "AD-USR-002": "High",
+    "AD-USR-003": "High",
     "AD-PRIV-001": "Info",
     "AD-PRIV-002": "High"
   },

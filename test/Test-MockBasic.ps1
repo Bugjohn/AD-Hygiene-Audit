@@ -14,7 +14,7 @@ pwsh -NoLogo -NoProfile -File ./Invoke-ADHygieneAudit.ps1 `
     -InactiveDays 90 `
     -Mode Full
 
-if (-not (Test-Path "$OutputPath/report.json")) {
+if (-not (Test-Path "$OutputPath/ad-hygiene-report.json")) {
     throw "JSON report manquant"
 }
 

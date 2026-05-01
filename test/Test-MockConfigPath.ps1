@@ -23,7 +23,7 @@ if (Test-Path $OutputPath) {
 pwsh -NoLogo -NoProfile -File ./Invoke-ADHygieneAudit.ps1 `
     -ConfigPath $ConfigPath
 
-if (-not (Test-Path "$OutputPath/report.json")) {
+if (-not (Test-Path "$OutputPath/ad-hygiene-report.json")) {
     throw "Report JSON manquant avec ConfigPath"
 }
 

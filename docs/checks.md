@@ -48,6 +48,28 @@ Détecte les comptes dont le mot de passe n’expire jamais.
 
 ---
 
+### AD-USR-003 — Comptes administrateurs
+
+**Description :**
+Identifie les comptes utilisateurs appartenant aux groupes administrateurs principaux.
+
+Groupes analysés :
+
+- Domain Admins
+- Enterprise Admins
+- Administrators
+
+**Risque :**
+
+- Comptes utilisateurs avec privilèges élevés
+- Surface d’attaque administrative
+- Mauvaise séparation entre comptes standards et comptes d’administration
+
+**Sortie :**
+Un finding agrégé contenant la liste des comptes administrateurs détectés.
+
+---
+
 ## 👑 Groupes privilégiés
 
 ### AD-PRIV-001 — Membres des groupes privilégiés
@@ -81,6 +103,23 @@ Identifie les comptes inactifs présents dans des groupes privilégiés.
 - Comptes fantômes avec privilèges élevés
 - Escalade de privilèges facilitée
 - Mauvaise hygiène des accès sensibles
+
+---
+
+### AD-COMP-001 — Ordinateurs inactifs
+
+**Description :**
+Identifie les comptes ordinateurs dont la dernière connexion dépasse le seuil d’inactivité défini.
+
+**Paramètre :**
+
+- `InactiveDays`
+
+**Risque :**
+
+- Postes obsolètes encore présents dans l’annuaire
+- Surface d’attaque inutile
+- Inventaire AD non maîtrisé
 
 ---
 
@@ -131,7 +170,6 @@ Un Finding contient typiquement :
 
 ### Ordinateurs
 
-- AD-COMP-001 : Ordinateurs inactifs
 - AD-COMP-002 : OS obsolètes
 
 ### Domaine
