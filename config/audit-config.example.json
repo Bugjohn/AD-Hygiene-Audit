@@ -1,0 +1,67 @@
+{
+  "audit": {
+    "inactiveDays": 90,
+    "mode": "Full",
+    "useMockData": false,
+    "outputPath": "./outputs"
+  },
+  "activeDirectory": {
+    "domain": "example.local",
+    "searchBase": "DC=example,DC=local",
+    "userSearchBase": "OU=Users,DC=example,DC=local",
+    "computerSearchBase": "OU=Computers,DC=example,DC=local",
+    "groupSearchBase": "OU=Groups,DC=example,DC=local"
+  },
+  "privilegedGroups": [
+    "Domain Admins",
+    "Enterprise Admins",
+    "Administrators"
+  ],
+  "checks": {
+    "users": {
+      "inactiveUsers": true,
+      "passwordNeverExpires": true,
+      "adminUsers": false
+    },
+    "privilegedGroups": {
+      "members": true,
+      "inactiveMembers": true,
+      "nestedGroups": false
+    },
+    "computers": {
+      "inactiveComputers": false,
+      "obsoleteOperatingSystems": false
+    },
+    "domain": {
+      "passwordPolicy": false,
+      "lockoutPolicy": false,
+      "functionalLevel": false
+    },
+    "kerberos": {
+      "serviceAccountsWithSpn": false,
+      "unconstrainedDelegation": false
+    }
+  },
+  "severity": {
+    "AD-USR-001": "Medium",
+    "AD-USR-002": "High",
+    "AD-PRIV-001": "Info",
+    "AD-PRIV-002": "High"
+  },
+  "reports": {
+    "json": true,
+    "csv": true,
+    "html": false,
+    "markdown": false
+  },
+  "scoring": {
+    "enabled": true,
+    "levels": {
+      "A": "Très bon niveau d’hygiène",
+      "B": "Bon niveau d’hygiène",
+      "C": "Niveau moyen",
+      "D": "Niveau faible",
+      "E": "Niveau critique"
+    }
+  }
+}

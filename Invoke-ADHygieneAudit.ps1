@@ -19,6 +19,36 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+if (Test-Path $ConfigPath) {
+    try {
+        $Config = Get-Content -Path $ConfigPath -Raw | ConvertFrom-Json
+        $AuditConfig = $Config.audit
+
+        if ($AuditConfig) {
+            if (-not $PSBoundParameters.ContainsKey("InactiveDays") -and $null -ne $AuditConfig.inactiveDays) {
+                $InactiveDays = [int]$AuditConfig.inactiveDays
+            }
+
+            if (-not $PSBoundParameters.ContainsKey("Mode") -and $AuditConfig.mode) {
+                $Mode = [string]$AuditConfig.mode
+            }
+
+            if (-not $PSBoundParameters.ContainsKey("UseMockData") -and $null -ne $AuditConfig.useMockData) {
+                $UseMockData = [bool]$AuditConfig.useMockData
+            }
+
+            if (-not $PSBoundParameters.ContainsKey("OutputPath") -and $AuditConfig.outputPath) {
+                $OutputPath = [string]$AuditConfig.outputPath
+            }
+        }
+    }
+    catch {
+        Write-Warning "Impossible de lire le fichier de configuration '$ConfigPath'. Les valeurs par défaut ou CLI seront utilisées."
+    }
+} else {
+    Write-Warning "Fichier de configuration introuvable : '$ConfigPath'. Les valeurs par défaut ou CLI seront utilisées."
+}
+
 . "$PSScriptRoot/src/Core/AuditRunner.ps1"
 . "$PSScriptRoot/src/Collectors/ADUserCollector.ps1"
 . "$PSScriptRoot/src/Collectors/MockUserCollector.ps1"
