@@ -2,6 +2,8 @@
 
 Outil PowerShell d'audit d'hygiene Active Directory niveau 1, concu avec une architecture modulaire, robuste et exploitable en entreprise.
 
+🌍 Languages: [🇬🇧 English](README.en-us.md) | 🇫🇷 French (default)
+
 ---
 
 ## Objectif
@@ -108,12 +110,12 @@ Regles fondamentales :
 
 ## Modes d'execution
 
-| Mode | Description |
-| --- | --- |
-| `Full` | Tous les checks disponibles |
-| `Daily` | Identique a `Full`, pour planification |
-| `UsersOnly` | Checks utilisateurs uniquement |
-| `PrivilegedOnly` | Checks privilegies uniquement |
+| Mode             | Description                            |
+| ---------------- | -------------------------------------- |
+| `Full`           | Tous les checks disponibles            |
+| `Daily`          | Identique a `Full`, pour planification |
+| `UsersOnly`      | Checks utilisateurs uniquement         |
+| `PrivilegedOnly` | Checks privilegies uniquement          |
 
 ## Resultats
 
@@ -140,13 +142,13 @@ Le score reel est numerique, de `0` a `100`.
 
 La base est `100`, puis les penalites sont appliquees selon la severite et le nombre d'elements detectes :
 
-| Severite | Penalite par element |
-| --- | ---: |
-| `Critical` | 20 |
-| `High` | 10 |
-| `Medium` | 5 |
-| `Low` | 2 |
-| `Info` | 0 |
+| Severite   | Penalite par element |
+| ---------- | -------------------: |
+| `Critical` |                   20 |
+| `High`     |                   10 |
+| `Medium`   |                    5 |
+| `Low`      |                    2 |
+| `Info`     |                    0 |
 
 Le rapport expose aussi le nombre de findings par severite.
 
