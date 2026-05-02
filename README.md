@@ -22,7 +22,7 @@ Le MVP actuel est complet et valide en mode Mock. Le mode Active Directory reel 
 ### 1. Cloner le projet
 
 ```powershell
-git clone https://github.com/<user>/AD-Hygiene-Audit.git
+git clone https://github.com/Bugjohn/AD-Hygiene-Audit.git
 cd AD-Hygiene-Audit
 ```
 

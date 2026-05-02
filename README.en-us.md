@@ -23,7 +23,7 @@ The real Active Directory mode is prepared in the collectors, but has not yet be
 ### 1. Clone the project
 
 ```powershell
-git clone https://github.com/<user>/AD-Hygiene-Audit.git
+git clone https://github.com/Bugjohn/AD-Hygiene-Audit.git
 cd AD-Hygiene-Audit
 ```
 
