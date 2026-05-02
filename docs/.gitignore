@@ -1,0 +1,85 @@
+# =========================
+# 🔐 Secrets & Credentials
+# =========================
+config/*.xml
+config/*.json
+config/*.ps1
+
+# (optionnel si tu veux être strict)
+*.credential*
+*.secret*
+*.key
+
+# =========================
+# 📊 Audit Outputs
+# =========================
+output/
+reports/
+*.csv
+*.json
+*.html
+*.md
+
+# =========================
+# 🧪 Logs & Temp files
+# =========================
+*.log
+*.tmp
+*.cache
+
+# =========================
+# 💻 PowerShell
+# =========================
+*.psd1
+*.psm1
+# (⚠️ garde les tiens si versionnés → à adapter)
+
+# =========================
+# 🖥️ OS / Editors
+# =========================
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+desktop.ini
+
+# VS Code
+.vscode/
+
+# JetBrains
+.idea/
+
+# =========================
+# 🧪 Test / Debug
+# =========================
+debug/
+tmp/
+sandbox/
+
+# =========================
+# 🐍 Python (si scripts futurs)
+# =========================
+__pycache__/
+*.pyc
+
+# =========================
+# 📦 Node (si un jour UI)
+# =========================
+node_modules/
+
+# =========================
+# 🔥 Sécurité parano mode ON
+# =========================
+*.pfx
+*.p12
+*.pem
+*.crt
+*.cer
+*.der
+
+# =========================
+# 🔥 Trash mac
+# =========================
+.DS_Store
