@@ -5,6 +5,7 @@
     "useMockData": false,
     "outputPath": "./outputs"
   },
+
   "activeDirectory": {
     "domain": "example.local",
     "credentialFile": "./config/ad-credential.xml",
@@ -18,6 +19,7 @@
     "Enterprise Admins",
     "Administrators"
   ],
+  
   "checks": {
     "users": {
       "inactiveUsers": true,

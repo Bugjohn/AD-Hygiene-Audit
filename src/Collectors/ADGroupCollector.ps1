@@ -1,3 +1,4 @@
+# Ne pas oublier de changer la conf dans audit-cobfig.example.json
 function Get-ADHygienePrivilegedGroups {
 
     if (-not (Get-Module -ListAvailable -Name ActiveDirectory)) {

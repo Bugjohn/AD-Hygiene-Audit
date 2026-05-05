@@ -1,3 +1,4 @@
+# Ne pas oublier de changer la conf dans audit-cobfig.example.json
 function Get-ADHygieneComputers {
     if (-not (Get-Module -ListAvailable -Name ActiveDirectory)) {
         throw "Le module PowerShell ActiveDirectory est introuvable. Installe RSAT ou exécute ce script depuis un serveur AD."
